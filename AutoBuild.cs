@@ -18,8 +18,10 @@ public class AutoBuild
     /// <summary>
     /// 时间戳格式 用于版本号及压缩包
     /// </summary>
-    public static string TIME_FORMAT = "yyyyMMdd HH:mm:ss";
-    public static string ZIP_TIME_FORMAT = "yyyyMMdd HH_mm_ss";
+    public static string TIME_FORMAT = "yyyyMMdd";
+//    public static string TIME_FORMAT = "yyyyMMdd HH:mm:ss";
+//    public static string ZIP_TIME_FORMAT = "yyyyMMdd HH_mm_ss";
+    private static string bundleVersion;
 
 
     //MSDN: https://docs.microsoft.com/en-us/dotnet/api/system.io.compression.ziparchive?redirectedfrom=MSDN&view=netframework-4.7.2
@@ -55,6 +57,7 @@ public class AutoBuild
         var appDir = buildPath + name;
 
         Debug.Log("Start building at "+appDir);
+
 
         PreBuild(buildPath, appDir);
 		BuildPlayer ( BuildTarget.StandaloneWindows64, name, buildPath );//BuildTarget.StandaloneWindows
@@ -113,9 +116,21 @@ public class AutoBuild
 
         DeleteAll(appDir);
 
-        WriteVersion(appDir);
+//        WriteVersion(appDir);
+        IncreaseVersion();
 
         CopyMsc(appDir);
+    }
+
+    private static void IncreaseVersion()
+    {
+        var oldVersion = PlayerSettings.bundleVersion;
+        Debug.Log("【AutoBuild】当前版本："+oldVersion);
+        float oldVersionCode = float.Parse(oldVersion.Split('_')[0].Replace("v",""));
+        float newVersionCode = oldVersionCode + 0.1f;
+        bundleVersion = string.Format("v{0}_{1}", newVersionCode, DateTime.Now.ToString(TIME_FORMAT));
+        PlayerSettings.bundleVersion = bundleVersion;
+        Debug.Log("【AutoBuild】最新版本："+bundleVersion);
     }
 
     /// <summary>
@@ -282,10 +297,10 @@ public class AutoBuild
 //		CopyFromProjectAssets( fullDataPath, "languages"); // language text files that Radiator uses
         //  copy over readme
 
-        string zipTime = DateTime.Now.ToString(ZIP_TIME_FORMAT);
+//        string zipTime = DateTime.Now.ToString(ZIP_TIME_FORMAT);
         // ZIP everything
 //        var zipPath = path + "HahaRobotCoach.zip";
-        var zipPath = path + BuildConfig.SchoolName + modifier + "_" + zipTime + ".zip";
+        var zipPath = path + BuildConfig.SchoolName + modifier + "_" + bundleVersion + ".zip";
         Debug.Log("Build finished at "+buildPath);
         CompressDirectory(buildPath, zipPath);
     }
